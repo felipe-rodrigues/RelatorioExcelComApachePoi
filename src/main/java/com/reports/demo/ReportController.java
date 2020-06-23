@@ -53,9 +53,12 @@ public class ReportController {
 
             XSSFChart chart = drawing.createChart(anchor);
 
+            return book;
+
         } catch (IOException e) {
             e.printStackTrace();
         }
+        return null;
     }
 
 }
