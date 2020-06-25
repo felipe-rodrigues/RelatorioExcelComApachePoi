@@ -1,5 +1,8 @@
 package com.reports.demo;
 
+import org.apache.commons.math3.optim.nonlinear.scalar.noderiv.BOBYQAOptimizer;
+import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.xddf.usermodel.chart.*;
 import org.apache.poi.xssf.usermodel.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
@@ -36,6 +39,15 @@ public class ReportController {
 
             XSSFWorkbook book = getExcelFile(inputStream);
 
+            response.setContentType("application/octet-stream");
+            response.setHeader("Content-Disposition",
+                    "attachment; filename=\""
+                            + "Gerando Gráfico excel"
+                            + ".xlsx\"");
+
+            book.write(response.getOutputStream());
+            return new ResponseEntity<String>(HttpStatus.OK);
+
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -52,6 +64,21 @@ public class ReportController {
             XSSFClientAnchor anchor = drawing.createAnchor(0, 0, 0, 0, 0, 5, 10, 15);
 
             XSSFChart chart = drawing.createChart(anchor);
+            XSSFRow row = sheet.getRow(1);
+            chart.setTitleText(row.getCell(0).getStringCellValue());
+            chart.setTitleOverlay(false);
+            XDDFChartLegend legend = chart.getOrAddLegend();
+            legend.setPosition(LegendPosition.RIGHT);
+
+            XDDFDataSource<String> categories =  XDDFDataSourcesFactory.fromStringCellRange(sheet,
+                    new CellRangeAddress(0, 0, 1, 6));
+            XDDFNumericalDataSource<Double> val = XDDFDataSourcesFactory.fromNumericCellRange(sheet,
+                    new CellRangeAddress(1, 1, 1, 6));
+
+            XDDFChartData data = chart.createData(ChartTypes.PIE,null,null);
+            data.setVaryColors(true);
+            data.addSeries(categories, val);
+            chart.plot(data);
 
             return book;
 
